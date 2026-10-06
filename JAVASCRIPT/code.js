@@ -1,199 +1,123 @@
-var playing = false;
-var score;
-var action;
-var timeRemaining;
-var correctAnwer;
+/**
+ * Maths Game
+ * A 60-second multiplication quiz: pick the box with the correct
+ * product before time runs out. Score goes up for every correct pick.
+ */
 
-// if we click on the start/reset
-document.getElementById("startReset").onclick = function(){
-    // if we are playing
-    if(playing == true){
-        hide("gameOver");
-        // reload page
-        location.reload();
+const GAME_LENGTH_SECONDS = 60;
+const BOX_COUNT = 4;
+
+let playing = false;
+let score = 0;
+let timeRemaining = 0;
+let correctAnswer = null;
+let countdownTimer = null;
+
+const startResetBtn = document.getElementById("startReset");
+const boxes = Array.from({ length: BOX_COUNT }, (_, i) =>
+  document.getElementById(`box${i + 1}`)
+);
+
+startResetBtn.addEventListener("click", () => {
+  if (playing) {
+    hide("gameOver");
+    location.reload();
+    return;
+  }
+
+  playing = true;
+  score = 0;
+  hide("gameOver");
+  document.getElementById("scoreValue").textContent = score;
+
+  show("timeRemaining");
+  timeRemaining = GAME_LENGTH_SECONDS;
+  document.getElementById("timeremainingvalue").textContent = timeRemaining;
+
+  startResetBtn.textContent = "Reset Game";
+
+  startCountdown();
+  generateQA();
+});
+
+boxes.forEach((box) => {
+  box.addEventListener("click", () => handleAnswer(box));
+});
+
+function handleAnswer(box) {
+  if (!playing) return;
+
+  if (box.textContent === String(correctAnswer)) {
+    score += 1;
+    document.getElementById("scoreValue").textContent = score;
+    flash("correct");
+    generateQA();
+  } else {
+    flash("wrong");
+  }
+}
+
+function flash(id) {
+  hide(id === "correct" ? "wrong" : "correct");
+  show(id);
+  setTimeout(() => hide(id), 1000);
+}
+
+function startCountdown() {
+  countdownTimer = setInterval(() => {
+    timeRemaining -= 1;
+    document.getElementById("timeremainingvalue").textContent = timeRemaining;
+
+    if (timeRemaining <= 0) {
+      endGame();
     }
-    // if we are not playing
-    else{
-        // change mode to playing
-        playing = true;
-        // set score to 0
-        score = 0;
-        hide("gameOver");
-        document.getElementById("scoreValue").innerHTML = score;
-        // show countdown box
-        show("timeRemaining");
-        timeRemaining = 60;
-        document.getElementById("timeremainingvalue").innerHTML = timeRemaining;
-        // change button to reset
-        document.getElementById("startReset").innerHTML = "Reset Game";
-        // Start Countdown
-        startCountdown();
-        // generate Q&A
-        generateQA();
+  }, 1000);
+}
 
+function endGame() {
+  clearInterval(countdownTimer);
+  playing = false;
+  show("gameOver");
+  document.getElementById("finalscore").textContent = score;
+  hide("timeRemaining");
+  hide("correct");
+  hide("wrong");
+  startResetBtn.textContent = "Start Game";
+}
+
+function hide(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+function show(id) {
+  document.getElementById(id).style.display = "block";
+}
+
+function randomFactor() {
+  return 1 + Math.round(9 * Math.random());
+}
+
+function generateQA() {
+  const x = randomFactor();
+  const y = randomFactor();
+  correctAnswer = x * y;
+  document.getElementById("question").textContent = `${x} x ${y}`;
+
+  const usedAnswers = new Set([correctAnswer]);
+  const correctBoxIndex = Math.floor(Math.random() * BOX_COUNT);
+
+  boxes.forEach((box, index) => {
+    if (index === correctBoxIndex) {
+      box.textContent = correctAnswer;
+      return;
     }
 
+    let wrongAnswer;
+    do {
+      wrongAnswer = randomFactor() * randomFactor();
+    } while (usedAnswers.has(wrongAnswer));
+
+    usedAnswers.add(wrongAnswer);
+    box.textContent = wrongAnswer;
+  });
 }
-
-document.getElementById("box1").onclick = function(){
-    if(playing == true){
-        if(document.getElementById("box1").innerHTML == correctAnwer){
-            score++;
-            document.getElementById("scoreValue").innerHTML = score;
-            hide("wrong");
-            show("correct");
-            setTimeout(function(){
-                hide("correct");
-            }, 1000);
-            generateQA();
-        }
-        else{
-            hide("correct");
-            show("wrong");
-            setTimeout(function(){
-                hide("wrong");
-            }, 1000);
-        }
-    }
-}
-document.getElementById("box2").onclick = function(){
-    if(playing == true){
-        if(document.getElementById("box2").innerHTML == correctAnwer){
-            score++;
-            document.getElementById("scoreValue").innerHTML = score;
-            hide("wrong");
-            show("correct");
-            setTimeout(function(){
-                hide("correct");
-            }, 1000);
-            generateQA();
-        }
-        else{
-            hide("correct");
-            show("wrong");
-            setTimeout(function(){
-                hide("wrong");
-            }, 1000);
-        }
-    }
-}
-document.getElementById("box3").onclick = function(){
-    if(playing == true){
-        if(document.getElementById("box3").innerHTML == correctAnwer){
-            score++;
-            document.getElementById("scoreValue").innerHTML = score;
-            hide("wrong");
-            show("correct");
-            setTimeout(function(){
-                hide("correct");
-            }, 1000);
-            generateQA();
-        }
-        else{
-            hide("correct");
-            show("wrong");
-            setTimeout(function(){
-                hide("wrong");
-            }, 1000);
-        }
-    }
-}
-document.getElementById("box4").onclick = function(){
-    if(playing == true){
-        if(document.getElementById("box4").innerHTML == correctAnwer){
-            score++;
-            document.getElementById("scoreValue").innerHTML = score;
-            hide("wrong");
-            show("correct");
-            setTimeout(function(){
-                hide("correct");
-            }, 1000);
-            generateQA();
-        }
-        else{
-            hide("correct");
-            show("wrong");
-            setTimeout(function(){
-                hide("wrong");
-            }, 1000);
-        }
-    }
-}
-
-
-
-function startCountdown(){
-    action = setInterval(function(){
-        timeRemaining -= 1;
-        document.getElementById("timeremainingvalue").innerHTML = timeRemaining;
-        if(timeRemaining  == 0){
-            // game over
-            stopCountdown();
-            show("gameOver");
-            document.getElementById("finalscore").innerHTML = score;
-            hide("timeRemaining");
-            hide("correct");
-            hide("wrong");
-            playing = false;
-            document.getElementById("startReset").innerHTML = "Start Game";
-        }
-    },1000);
-}
-
-function stopCountdown(){
-    clearInterval(action);
-}
-
-function hide(id){
-    document.getElementById(id).style.display = "none";
-}
-
-function show(id){
-    document.getElementById(id).style.display = "block";
-}
-
-function generateQA(){
-    var x = 1 + Math.round(9*Math.random());
-    var y = 1 + Math.round(9*Math.random());
-    correctAnwer = x*y;
-    document.getElementById("question").innerHTML = x + "x" + y;
-    var correctPosition = 1 + Math.round(3*Math.random());
-    document.getElementById("box"+correctPosition).innerHTML = correctAnwer;
-    var answers = [correctAnwer];
-    for(i=1; i<5; i++){
-        if(i != correctPosition){
-            var wrongAnswer;
-            do{
-                wrongAnswer = (1 + Math.round(9*Math.random())) * (1 + Math.round(9*Math.random()))
-            }
-            while(answers.indexOf(wrongAnswer) > -1){}
-            document.getElementById("box"+i).innerHTML = wrongAnswer;
-            answers.push(wrongAnswer);
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
